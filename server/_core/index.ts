@@ -8,6 +8,8 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { handleScheduledFetch } from "../scheduledFetch";
+import { sdk } from "./sdk";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -44,6 +46,26 @@ async function startServer() {
       createContext,
     })
   );
+  // Scheduled fetch handler for MPCI data updates
+  app.post("/api/scheduled/fetch-mpci", async (req, res) => {
+    try {
+      const user = await sdk.authenticateRequest(req);
+      if (!user.isCron) {
+        return res.status(403).json({ error: "cron-only" });
+      }
+
+      const result = await handleScheduledFetch();
+      res.json(result);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("[ScheduledFetch] Handler error:", errorMessage);
+      res.status(500).json({
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

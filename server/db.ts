@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, stockData, InsertStockData, technicalIndicators, InsertTechnicalIndicators, priceHistory, InsertPriceHistory, tradingSignals, InsertTradingSignals } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,98 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * Get the latest stock data for MPCI.
+ */
+export async function getLatestStockData() {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(stockData).orderBy(desc(stockData.createdAt)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+/**
+ * Get the latest technical indicators for MPCI.
+ */
+export async function getLatestTechnicalIndicators() {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(technicalIndicators).orderBy(desc(technicalIndicators.createdAt)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+/**
+ * Get price history for a specific date range.
+ */
+export async function getPriceHistory(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(priceHistory)
+    .where(and(
+      gte(priceHistory.date, startDate),
+      lte(priceHistory.date, endDate)
+    ))
+    .orderBy(asc(priceHistory.date));
+}
+
+/**
+ * Insert new stock data.
+ */
+export async function insertStockData(data: InsertStockData) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(stockData).values(data);
+  return result;
+}
+
+/**
+ * Insert new technical indicators.
+ */
+export async function insertTechnicalIndicators(data: InsertTechnicalIndicators) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(technicalIndicators).values(data);
+  return result;
+}
+
+/**
+ * Insert price history data.
+ */
+export async function insertPriceHistory(data: InsertPriceHistory) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(priceHistory).values(data);
+  return result;
+}
+
+/**
+ * Get recent trading signals.
+ */
+export async function getRecentTradingSignals(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(tradingSignals)
+    .orderBy(desc(tradingSignals.createdAt))
+    .limit(limit);
+}
+
+/**
+ * Insert a new trading signal.
+ */
+export async function insertTradingSignal(data: InsertTradingSignals) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(tradingSignals).values(data);
+  return result;
+}
+
+/**
+ * Update trading signal notification status.
+ */
+export async function updateTradingSignalNotification(id: number, sent: boolean) {
+  const db = await getDb();
+  if (!db) return null;
+  return await db.update(tradingSignals)
+    .set({ notificationSent: sent ? 1 : 0 })
+    .where(eq(tradingSignals.id, id));
+}

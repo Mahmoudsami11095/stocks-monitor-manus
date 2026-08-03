@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm build",
+  "devCommand": "pnpm dev",
+  "installCommand": "pnpm install",
+  "framework": "vite",
+  "regions": ["iad1"],
+  "env": {
+    "NODE_ENV": {
+      "value": "production"
+    },
+    "VITE_APP_ID": {
+      "description": "Application ID for OAuth integration"
+    },
+    "JWT_SECRET": {
+      "description": "Secret key for JWT token signing"
+    },
+    "DATABASE_URL": {
+      "description": "MySQL database connection URL"
+    },
+    "OAUTH_SERVER_URL": {
+      "description": "OAuth server URL for authentication"
+    },
+    "OWNER_OPEN_ID": {
+      "description": "Owner's OpenID for notifications"
+    },
+    "BUILT_IN_FORGE_API_URL": {
+      "description": "Forge API URL for scheduled tasks"
+    },
+    "BUILT_IN_FORGE_API_KEY": {
+      "description": "Forge API key for authentication"
+    }
+  },
+  "functions": {
+    "server/_core/index.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/server"
+    }
+  ]
+}

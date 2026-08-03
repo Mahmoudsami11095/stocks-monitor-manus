@@ -1,0 +1,14 @@
+.git
+.gitignore
+.env.local
+.env.*.local
+node_modules
+pnpm-lock.yaml
+*.md
+.manus-logs
+.webdev-ref-id
+dist
+.vite
+.turbo
+coverage
+.nyc_output
